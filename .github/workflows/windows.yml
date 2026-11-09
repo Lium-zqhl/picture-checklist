@@ -1,0 +1,35 @@
+name: Windows build and tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Check runtime
+        run: .\scripts\check-environment.ps1 -Json
+      - name: Build and test
+        run: .\scripts\build.ps1 -Tests
+      - name: Package and verify archives
+        run: .\scripts\package.ps1
+      - name: Upload packages for review
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: picture-checklist-windows
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,50 @@
+name: 缺陷反馈
+description: 报告可复现的运行、图片、保存或界面问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请尽量使用演示清单或资料副本复现。截图、日志和样本请先移除私人内容、个人路径及无关项目数据。
+  - type: input
+    id: app_version
+    attributes:
+      label: 程序版本
+      placeholder: 例如 1.0.4
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境
+      description: Windows 版本和 build、系统架构、.NET Framework；窗口问题也请写显示缩放比例。
+      placeholder: Windows 10 22H2 / build 19045 / x64 / .NET Framework 4.8.1 / 100%
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开一份清单副本
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected_actual
+    attributes:
+      label: 预期与实际结果
+      description: 说明本来希望发生什么，以及实际发生了什么。
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: 错误文字或环境检查结果
+      description: 如有，请粘贴完整文字并移除个人路径等信息。
+      render: text
+  - type: textarea
+    id: sample
+    attributes:
+      label: 脱敏截图或最小样本
+      description: 可选。图片问题请说明来自截图粘贴、文件拖入还是选图片；保存问题请说明是否能重试成功。

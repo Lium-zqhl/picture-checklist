@@ -1,0 +1,28 @@
+name: 功能建议
+description: 描述一个具体的修改清单使用场景
+title: "[Feature] "
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景
+      description: 你在完成什么工作，当前哪一步不方便？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 期望的操作和结果
+      description: 描述用户怎么操作、完成后应看到什么，尽量保留浮窗的简单性。
+    validations:
+      required: true
+  - type: textarea
+    id: existing_workaround
+    attributes:
+      label: 目前的处理办法
+      description: 可选。你现在如何完成这件事？
+  - type: textarea
+    id: examples
+    attributes:
+      label: 参考示例
+      description: 可选。上传前请移除私人内容。
