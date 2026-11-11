@@ -17,6 +17,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-tests.ps1
 - `generated-demo/`：由生成器创建的三条入门演示；不会覆盖仓库中的样本。
 - `empty-window.png`、`demo-window.png`、`demo-window-narrow.png`：实际 WPF 内容渲染，用于检查布局。
 - `library-with-delete.png`、`library-removed.png`：清单库的删除位置，以及确认移除后的提示和撤销入口。
+- `body-copy-window.png`、`body-copy-compact.png`：多行中文正文在普通模式和紧凑展开后的显示。
 
 所有测试图片都由 `SyntheticData.cs` 自行生成：像素数组用于透明度测试，WPF 几何图形和系统字体用于演示画面。无需用户资料、真实截图或仓库之外的测试资源。
 
@@ -35,7 +36,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run-tests.ps1
 11. 清单库“删除”位于“打开”左侧；取消、确认移除、撤销全过程中，清单、图片及上一保存点文件逐字节不变。
 12. 隐藏记录跨关闭重开保留；旧 Preferences 和另一个已打开窗口不会复活入口；显式重新打开可以恢复入口。
 13. 清单库记录文件被独占锁定时，API 拒绝写入且界面报告失败，不显示移除成功；解锁后可重试、撤销。
+14. 正文多行中文、空格和跨行局部选择保持准确；真实 `ApplicationCommands.Copy` 提供对应 `UnicodeText`，右键复制/全选正确指向正文，紧凑展开后仍可复制。只读正文禁用剪切/粘贴，合成图片粘贴事件不新增意见；选择与复制前后完整文档、完成状态及清单/图片/备份文件哈希不变。
 
-验收边界：使用真实 WPF 控件事件和进程内 `DataObject`，不读取或改写系统剪贴板，不发送键鼠输入，也不访问其他应用窗口。测试窗口隐藏，防激活 hook 仅限本测试 UI 线程。渲染图不是桌面截图；通过这些测试不能代替真实截图工具的 Ctrl+V、多屏/DPI 切换、原生文件选择器等桌面验收。
+验收边界：使用真实 WPF 控件事件和进程内 `DataObject`，复制测试在 `DataObject.Copying` 处理器首先调用 `CancelCommand()`，然后检查拟复制内容，不读取或改写系统剪贴板。粘贴命令可用性仅对只读正文查询，其祖先处理器会在读取剪贴板前直接拒绝；图片粘贴用进程内合成事件。测试不发送键鼠输入，也不访问其他应用窗口。测试窗口隐藏，防激活 hook 仅限本测试 UI 线程。渲染图不是桌面截图；通过这些测试不能代替实际鼠标拖选和 Ctrl+C、真实截图工具的 Ctrl+V、多屏/DPI 切换、原生文件选择器等桌面验收。
 
 90 秒超时会报告本次测试进程 PID，不结束任何进程。通过时通常数秒完成。`artifacts/` 是运行产物，应保持在版本控制之外。如果 Windows 提示路径或文件名太长，请把源码解压到较短目录再运行；测试脚本不会更改系统的长路径设置。

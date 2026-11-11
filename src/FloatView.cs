@@ -481,9 +481,21 @@ namespace PictureChecklist
             StackPanel description = new StackPanel();
             if (!string.IsNullOrWhiteSpace(bodyText))
             {
-                TextBlock body = FloatControls.Text(bodyText, 13);
-                body.Margin = new Thickness(0, 6, 0, 2);
+                TextBox body = new TextBox { Text = bodyText, FontSize = 13, Foreground = FloatControls.Ink,
+                    IsReadOnly = true, IsUndoEnabled = false, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
+                    Background = Brushes.Transparent, BorderThickness = new Thickness(0), Padding = new Thickness(0),
+                    Margin = new Thickness(0, 6, 0, 2), Cursor = Cursors.IBeam,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                    IsInactiveSelectionHighlightEnabled = true,
+                    ToolTip = "拖选文字后按 Ctrl+C 复制；右键可复制或全选" };
                 FloatControls.Identify(body, "FloatBody" + suffix, "意见正文");
+                ContextMenu textMenu = new ContextMenu();
+                textMenu.Items.Add(new MenuItem { Header = "复制", Command = ApplicationCommands.Copy,
+                    CommandTarget = body, InputGestureText = "Ctrl+C" });
+                textMenu.Items.Add(new MenuItem { Header = "全选", Command = ApplicationCommands.SelectAll,
+                    CommandTarget = body, InputGestureText = "Ctrl+A" });
+                body.ContextMenu = textMenu;
                 description.Children.Add(body);
             }
             if (description.Children.Count > 0)

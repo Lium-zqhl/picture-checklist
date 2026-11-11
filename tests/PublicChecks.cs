@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -361,6 +362,79 @@ namespace PictureChecklist
             Pass("Self-contained synthetic demo, normal/narrow WPF render and usable layout");
         }
 
+        static void CopySelection(TextBox body, string expected)
+        {
+            int copies = 0; string copied = null; bool unicode = false, dragDrop = false;
+            DataObjectCopyingEventHandler capture = delegate(object sender, DataObjectCopyingEventArgs e) {
+                // Cancel first: even a later assertion failure must never write the system clipboard.
+                e.CancelCommand(); copies++; dragDrop = e.IsDragDrop;
+                unicode = e.DataObject.GetDataPresent(DataFormats.UnicodeText, false);
+                if (unicode) copied = e.DataObject.GetData(DataFormats.UnicodeText, false) as string;
+            };
+            DataObject.AddCopyingHandler(body, capture);
+            try {
+                Check(ApplicationCommands.Copy.CanExecute(null, body), "Selected body text enables the real Copy command");
+                ApplicationCommands.Copy.Execute(null, body);
+            } finally { DataObject.RemoveCopyingHandler(body, capture); }
+            Check(copies == 1 && !dragDrop && unicode && copied == expected,
+                "Copy prepares exactly the selected Unicode text before clipboard transfer is cancelled");
+        }
+        static async Task BodyCopyCases()
+        {
+            const string text = "  第一行：检查窗框。\r\n第二行：复制这段中文，并保留标点。\r\n第三行：保留尾部空格。  ";
+            const string part = "窗框。\r\n第二行：复制这段中文";
+            string path = Path.Combine(run, "body-copy-data");
+            Document document = SyntheticData.CreateDemo(path, Path.Combine(run, "body-copy-inputs"));
+            Entry entry = document.Items[0]; entry.Body = text; entry.Status = "done"; Store.Save(path, document);
+            Dictionary<string, string> original = LibraryDataHashes(path);
+            await Open(path); await Reveal(entry.Id);
+            string before = ModelJson.Write(shell.Doc);
+            TextBox body = Need<TextBox>("FloatBody_" + entry.Id);
+            Check(body.IsReadOnly && body.IsEnabled && body.IsHitTestVisible, "Body permits selection while remaining read-only");
+            Check(body.Text == text, "Body preserves multiline Chinese, punctuation and surrounding whitespace");
+            int textChanges = 0; body.TextChanged += delegate { textChanges++; };
+            body.Select(text.IndexOf(part, StringComparison.Ordinal), part.Length);
+            Check(body.SelectedText == part, "Partial selection includes the exact Chinese text across the line break");
+            CopySelection(body, part);
+            Check(!ApplicationCommands.Cut.CanExecute(null, body), "Read-only body disables Cut");
+            // FloatComposer rejects read-only targets before consulting the system clipboard.
+            Check(!ApplicationCommands.Paste.CanExecute(null, body), "Read-only body disables Paste before clipboard access");
+            DataObjectPastingEventArgs paste = new DataObjectPastingEventArgs(BitmapData(73, 255), false, DataFormats.Bitmap) {
+                RoutedEvent = DataObject.PastingEvent
+            };
+            body.RaiseEvent(paste);
+            Check(paste.CommandCancelled && paste.Handled && ModelJson.Write(shell.Doc) == before,
+                "Pasting a synthetic image into the read-only body cannot create or edit an opinion");
+
+            Check(body.ContextMenu != null, "Body exposes a text context menu");
+            MenuItem copy = body.ContextMenu.Items.OfType<MenuItem>().SingleOrDefault(item => item.Command == ApplicationCommands.Copy);
+            MenuItem selectAll = body.ContextMenu.Items.OfType<MenuItem>().SingleOrDefault(item => item.Command == ApplicationCommands.SelectAll);
+            Check(copy != null && copy.CommandTarget == body && selectAll != null && selectAll.CommandTarget == body,
+                "Context-menu Copy and Select All target this body instead of another input");
+            ApplicationCommands.SelectAll.Execute(selectAll.CommandParameter, selectAll.CommandTarget);
+            Check(body.SelectedText == text, "Context-menu Select All selects the full multiline body");
+            CopySelection(body, text);
+            Check(textChanges == 0 && body.Text == text, "Selection and copy never edit the displayed body");
+            Render("body-copy-window.png");
+
+            CheckBox compact = Need<CheckBox>("Compact"); compact.IsChecked = true;
+            compact.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent)); shell.UpdateLayout(); await Reveal(entry.Id);
+            Border card = Need<Border>("FloatCard_" + entry.Id);
+            Expander description = Elements<Expander>(card).Single(x => Object.Equals(x.Header, "意见说明"));
+            Check(!description.IsExpanded, "Compact mode initially folds the body description");
+            description.IsExpanded = true; shell.UpdateLayout();
+            body = Need<TextBox>("FloatBody_" + entry.Id);
+            Check(body.IsVisible && body.IsReadOnly && body.Text == text, "Expanded compact description exposes the unchanged selectable body");
+            body.SelectAll(); CopySelection(body, text); Render("body-copy-compact.png");
+            Check(ModelJson.Write(shell.Doc) == before && Need<CheckBox>("FloatDone_" + entry.Id).IsChecked == true,
+                "Body selection, Copy and compact expansion preserve the complete document and completion state");
+            SameLibraryData(path, original, "Body copying leaves checklist, images and previous save byte-for-byte unchanged");
+            compact = Need<CheckBox>("Compact"); compact.IsChecked = false;
+            compact.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent)); shell.Close(); shell = null;
+            SameLibraryData(path, original, "Closing after body copying still does not rewrite checklist data");
+            Pass("Read-only body: exact partial/full Chinese Unicode Copy, blocked Cut/Paste, context commands, compact expansion and unchanged checklist data");
+        }
+
         static Dictionary<string, string> LibraryDataHashes(string path)
         {
             string prefix = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -534,7 +608,7 @@ namespace PictureChecklist
                 hookProc = WindowHook; hook = SetWindowsHookEx(5, hookProc, IntPtr.Zero, GetCurrentThreadId());
                 Check(hook != IntPtr.Zero, "Test-thread activation suppression is installed");
                 app.Dispatcher.BeginInvoke(new Action(async delegate {
-                    try { await UiCases(); await LibraryCases(); exit = 0; Log("RESULT PASS " + groups + " groups / " + assertions + " assertions"); }
+                    try { await UiCases(); await BodyCopyCases(); await LibraryCases(); exit = 0; Log("RESULT PASS " + groups + " groups / " + assertions + " assertions"); }
                     catch (Exception ex) { Log("RESULT FAIL " + ex); }
                     finally { if (saveLock != null) { saveLock.Dispose(); saveLock = null; } app.Shutdown(exit); }
                 }), DispatcherPriority.Background);

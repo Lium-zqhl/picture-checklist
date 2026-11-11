@@ -9,8 +9,8 @@ using System.Windows.Data;
 [assembly: AssemblyTitle("图文修改清单")]
 [assembly: AssemblyProduct("图文修改清单")]
 [assembly: AssemblyDescription("个人使用的本地图文意见清单")]
-[assembly: AssemblyVersion("1.0.5.0")]
-[assembly: AssemblyFileVersion("1.0.5.0")]
+[assembly: AssemblyVersion("1.0.6.0")]
+[assembly: AssemblyFileVersion("1.0.6.0")]
 
 namespace PictureChecklist
 {

@@ -136,27 +136,36 @@ namespace PictureChecklist
         void CanPaste(object sender, CanExecuteRoutedEventArgs e)
         {
             if (e.Command != ApplicationCommands.Paste) return;
+            if (ReadOnlyText(e)) { e.CanExecute = false; e.Handled = true; return; }
             try { if (DirectPaste.HasImages(DirectPaste.ReadClipboard())) { e.CanExecute = true; e.Handled = true; } }
             catch (Exception) { }
         }
         void PasteCommand(object sender, ExecutedRoutedEventArgs e)
         {
             if (e.Command != ApplicationCommands.Paste) return;
+            if (ReadOnlyText(e)) { e.Handled = true; return; }
             try { var data = DirectPaste.ReadClipboard(); if (!DirectPaste.HasImages(data)) return; e.Handled = true; PasteData(data); }
             catch (Exception ex) { e.Handled = true; host.Error(ex.Message); }
         }
         void PasteKey(object sender, KeyEventArgs e)
         {
             if (!((e.Key == Key.V && Keyboard.Modifiers == ModifierKeys.Control) || (e.Key == Key.Insert && Keyboard.Modifiers == ModifierKeys.Shift))) return;
+            if (ReadOnlyText(e)) { e.Handled = true; return; }
             try { var data = DirectPaste.ReadClipboard(); if (!DirectPaste.HasImages(data)) return; e.Handled = true; PasteData(data); }
             catch (Exception ex) { e.Handled = true; host.Error(ex.Message); }
         }
         void OnPasting(object sender, DataObjectPastingEventArgs e)
         {
+            if (ReadOnlyText(e)) { e.CancelCommand(); e.Handled = true; return; }
             try {
                 if (!DirectPaste.HasImages(e.DataObject)) return;
                 e.CancelCommand(); PasteData(e.DataObject);
             } catch (Exception ex) { e.CancelCommand(); host.Error(ex.Message); }
+        }
+        static bool ReadOnlyText(RoutedEventArgs e)
+        {
+            TextBox text = e.OriginalSource as TextBox;
+            return text != null && text.IsReadOnly;
         }
     }
 }
