@@ -53,7 +53,7 @@ namespace PictureChecklist
             UseLayoutRounding = true;
             Width = 900; Height = 670; MinWidth = 260; MinHeight = 190;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            Background = FloatControls.ColorBrush("#F2F4F1");
+            SetResourceReference(Control.BackgroundProperty, Design.Surface);
             FloatControls.Identify(this, "PictureViewer", "原图查看器");
             FloatControls.Identify(picture, "ViewerImage", "当前原图");
             RenderOptions.SetBitmapScalingMode(picture, BitmapScalingMode.HighQuality);
@@ -78,13 +78,14 @@ namespace PictureChecklist
             FloatControls.Identify(scaleLabel, "ViewerZoomLevel", "当前缩放比例");
             toolbar.Children.Add(scaleLabel);
             Command(toolbar, "关闭", "ViewerClose", delegate { Close(); });
-            caption.Foreground = FloatControls.Muted;
+            caption.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             caption.Margin = new Thickness(0, 3, 0, 1);
             caption.TextWrapping = TextWrapping.NoWrap;
             caption.TextTrimming = TextTrimming.CharacterEllipsis;
             FloatControls.Identify(caption, "ViewerCaption", "当前图片");
             top.Children.Add(caption);
-            Grid area = new Grid { Background = FloatControls.ColorBrush("#E2E8E3"), ClipToBounds = true };
+            Grid area = new Grid { ClipToBounds = true };
+            area.SetResourceReference(Panel.BackgroundProperty, Design.ViewerCanvas);
             layout.Children.Add(area);
             FloatControls.Identify(scroll, "ViewerScroll", "图片滚动区域");
             scroll.ToolTip = "Ctrl + 滚轮缩放；放大后按住图片拖动。左右方向键切换图片。";

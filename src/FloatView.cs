@@ -15,13 +15,7 @@ namespace PictureChecklist
 {
     internal static class FloatControls
     {
-        public static readonly Brush Ink = ColorBrush("#263934");
-        public static readonly Brush Muted = ColorBrush("#7D8983");
-        public static readonly Brush Line = ColorBrush("#E0E6DF");
-        public static readonly Brush Green = ColorBrush("#25735E");
         public static readonly Brush Alert = ColorBrush("#94491F");
-        public static readonly Brush Completed = ColorBrush("#EDF5EF");
-        public static readonly Brush CompletedLine = ColorBrush("#D3E6D8");
 
         public static Brush ColorBrush(string color)
         {
@@ -38,14 +32,15 @@ namespace PictureChecklist
 
         public static TextBlock Text(string value, double size)
         {
-            return new TextBlock { Text = value, FontSize = size, Foreground = Ink,
-                VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
+            return Design.Text(value, size);
         }
 
         public static Button Button(string label, string id, Action action)
         {
             Button button = new Button { Content = label, MinHeight = 26, Padding = new Thickness(6, 2, 6, 2),
-                Background = Brushes.White, BorderBrush = Line, Foreground = Ink, Cursor = Cursors.Hand };
+                Background = Brushes.White, Cursor = Cursors.Hand };
+            button.SetResourceReference(Control.BorderBrushProperty, Design.Line);
+            button.SetResourceReference(Control.ForegroundProperty, Design.Ink);
             Identify(button, id, label);
             button.Click += delegate { action(); };
             return button;
@@ -99,7 +94,7 @@ namespace PictureChecklist
         readonly TextBlock totals = FloatControls.Text("", 13);
         readonly TextBlock unclearCount = FloatControls.Text("", 13);
         readonly ProgressBar progress = new ProgressBar { Height = 3, BorderThickness = new Thickness(0),
-            Background = FloatControls.Line, Foreground = FloatControls.Green, Margin = new Thickness(0, 9, 0, 10) };
+            Margin = new Thickness(0, 9, 0, 10) };
         readonly TextBox query = new TextBox { Padding = new Thickness(6, 3, 6, 3), MinHeight = 26 };
         readonly ComboBox filter = new ComboBox { Width = 89, VerticalContentAlignment = VerticalAlignment.Center };
         readonly ComboBox jump = new ComboBox { VerticalContentAlignment = VerticalAlignment.Center,
@@ -139,6 +134,8 @@ namespace PictureChecklist
             FloatControls.Identify(totals, "FloatProgressText", "完成数");
             FloatControls.Identify(unclearCount, "FloatUnclearCount", "待澄清数");
             FloatControls.Identify(progress, "FloatProgressBar", "完成进度");
+            progress.SetResourceReference(Control.BackgroundProperty, Design.Line);
+            progress.SetResourceReference(Control.ForegroundProperty, Design.Accent);
             fixedPart.Children.Add(summary);
             fixedPart.Children.Add(progress);
 
@@ -167,7 +164,7 @@ namespace PictureChecklist
             fixedPart.Children.Add(filter);
             Button searchToggle = FloatControls.Button("搜索", "FloatSearchToggle", delegate { });
             searchToggle.BorderThickness = new Thickness(0); searchToggle.Background = Brushes.Transparent;
-            searchToggle.Foreground = FloatControls.Muted; searchToggle.FontSize = 12;
+            searchToggle.SetResourceReference(Control.ForegroundProperty, Design.Muted); searchToggle.FontSize = 12;
             DockPanel.SetDock(searchToggle, Dock.Right); tools.Children.Add(searchToggle);
             StackPanel tabs = new StackPanel { Orientation = Orientation.Horizontal };
             string[] tabNames = { "全部", "未完成", "已完成" };
@@ -188,7 +185,7 @@ namespace PictureChecklist
             FloatControls.Identify(query, "FloatSearch", "搜索编号、意见或备注");
             searchBox.Children.Add(query);
             TextBlock placeholder = FloatControls.Text("搜索编号、意见或备注", 12);
-            placeholder.Foreground = FloatControls.Muted;
+            placeholder.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             placeholder.IsHitTestVisible = false;
             placeholder.Margin = new Thickness(8, 0, 3, 0);
             placeholder.Visibility = query.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -224,7 +221,7 @@ namespace PictureChecklist
             DockPanel.SetDock(composer, Dock.Bottom); main.Children.Add(composer);
             FloatControls.Identify(reading, "FloatReading", "意见卡片列表");
             reading.Margin = new Thickness(12, 8, 12, 0);
-            reading.Background = FloatControls.ColorBrush("#F7F9F6");
+            reading.SetResourceReference(Control.BackgroundProperty, Design.Surface);
             main.Children.Add(reading);
             query.TextChanged += delegate
             {
@@ -286,9 +283,10 @@ namespace PictureChecklist
             int done = all.Count(e => e.Status == "done");
             int remaining = all.Count - done;
             outstanding.Text = "剩余 " + remaining + " 条";
-            outstanding.Foreground = remaining == 0 ? FloatControls.Green : FloatControls.Alert;
+            if (remaining == 0) outstanding.SetResourceReference(TextBlock.ForegroundProperty, Design.Accent);
+            else outstanding.Foreground = FloatControls.Alert;
             totals.Text = done + " / " + all.Count + " 已完成";
-            totals.Foreground = FloatControls.Green;
+            totals.SetResourceReference(TextBlock.ForegroundProperty, Design.Accent);
             unclearCount.Text = "待澄清 " + all.Count(Unclear);
             progress.Maximum = Math.Max(1, all.Count);
             progress.Value = done;
@@ -302,9 +300,10 @@ namespace PictureChecklist
                 bool done = entry.Status == "done";
                 string label = (done ? "✓ " : "") + numbers[entry.Id].ToString("00");
                 button.Content = label;
-                button.Background = done ? FloatControls.Completed : Brushes.White;
-                button.BorderBrush = done ? FloatControls.CompletedLine : FloatControls.Line;
-                button.Foreground = done ? FloatControls.Green : FloatControls.Ink;
+                if (done) button.SetResourceReference(Control.BackgroundProperty, Design.Completed);
+                else button.Background = Brushes.White;
+                button.SetResourceReference(Control.BorderBrushProperty, done ? Design.CompletedLine : Design.Line);
+                button.SetResourceReference(Control.ForegroundProperty, done ? Design.Accent : Design.Ink);
                 button.ToolTip = entry.Title + (done ? " · 已完成" : " · 未完成") + (Unclear(entry) ? " · 待澄清" : "");
                 FloatControls.Identify(button, "FloatNumber_" + entry.Id, label + " " + entry.Title);
             }
@@ -332,8 +331,9 @@ namespace PictureChecklist
         {
             foreach (Button tab in visibleFilters) {
                 bool active = (int)tab.Tag == filter.SelectedIndex;
-                tab.Background = active ? FloatControls.Completed : Brushes.Transparent;
-                tab.Foreground = active ? FloatControls.Green : FloatControls.Muted;
+                if (active) tab.SetResourceReference(Control.BackgroundProperty, Design.Completed);
+                else tab.Background = Brushes.Transparent;
+                tab.SetResourceReference(Control.ForegroundProperty, active ? Design.Accent : Design.Muted);
                 tab.FontWeight = active ? FontWeights.SemiBold : FontWeights.Normal;
             }
             matches = all.Where(Matches).ToList();
@@ -432,7 +432,7 @@ namespace PictureChecklist
                 host.SelectedId = entry.Id; new EntryEditor(host, entry).ShowDialog();
             });
             edit.Background = Brushes.Transparent; edit.BorderThickness = new Thickness(0);
-            edit.FontSize = 11; edit.Foreground = FloatControls.Muted; edit.MinHeight = 22; edit.Padding = new Thickness(3, 0, 0, 0);
+            edit.FontSize = 11; edit.SetResourceReference(Control.ForegroundProperty, Design.Muted); edit.MinHeight = 22; edit.Padding = new Thickness(3, 0, 0, 0);
             DockPanel.SetDock(edit, Dock.Right); titleRow.Children.Add(edit);
             TextBlock title = FloatControls.Text(numbers[entry.Id].ToString("00") + "  " + entry.Title, 14);
             title.FontWeight = FontWeights.SemiBold;
@@ -448,10 +448,11 @@ namespace PictureChecklist
             {
                 bool done = entry.Status == "done";
                 completed.IsChecked = done;
-                card.Background = FloatControls.ColorBrush(done ? "#F2F7F1" : "#FFFFFF");
-                card.BorderBrush = done ? FloatControls.ColorBrush("#D7E4D8") : FloatControls.Line;
+                if (done) card.SetResourceReference(Border.BackgroundProperty, Design.CompletedCard);
+                else card.Background = Brushes.White;
+                card.SetResourceReference(Border.BorderBrushProperty, done ? Design.CompletedLine : Design.Line);
                 state.Text = done ? "✓ 已完成" : "未完成";
-                state.Foreground = done ? FloatControls.Green : FloatControls.Muted;
+                state.SetResourceReference(TextBlock.ForegroundProperty, done ? Design.Accent : Design.Muted);
                 completed.ToolTip = done ? "点击取消完成，重新打开" : "点击标记为已完成";
             };
             Action changed = delegate
@@ -481,7 +482,7 @@ namespace PictureChecklist
             StackPanel description = new StackPanel();
             if (!string.IsNullOrWhiteSpace(bodyText))
             {
-                TextBox body = new TextBox { Text = bodyText, FontSize = 13, Foreground = FloatControls.Ink,
+                TextBox body = new TextBox { Text = bodyText, FontSize = 13,
                     IsReadOnly = true, IsUndoEnabled = false, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
                     Background = Brushes.Transparent, BorderThickness = new Thickness(0), Padding = new Thickness(0),
                     Margin = new Thickness(0, 6, 0, 2), Cursor = Cursors.IBeam,
@@ -490,6 +491,7 @@ namespace PictureChecklist
                     IsInactiveSelectionHighlightEnabled = true,
                     ToolTip = "拖选文字后按 Ctrl+C 复制；右键可复制或全选" };
                 FloatControls.Identify(body, "FloatBody" + suffix, "意见正文");
+                body.SetResourceReference(Control.ForegroundProperty, Design.Ink);
                 ContextMenu textMenu = new ContextMenu();
                 textMenu.Items.Add(new MenuItem { Header = "复制", Command = ApplicationCommands.Copy,
                     CommandTarget = body, InputGestureText = "Ctrl+C" });
@@ -555,8 +557,9 @@ namespace PictureChecklist
             details.Children.Add(clarify);
             Expander notes = new Expander { Content = details,
                 Header = string.IsNullOrEmpty(entry.Note) ? "添加备注" : "查看备注",
-                IsExpanded = false, FontSize = 11, Foreground = FloatControls.Muted, Margin = new Thickness(0, 7, 0, 1) };
+                IsExpanded = false, FontSize = 11, Margin = new Thickness(0, 7, 0, 1) };
             FloatControls.Identify(notes, "FloatNotesToggle" + suffix, "展开备注和进度");
+            notes.SetResourceReference(Control.ForegroundProperty, Design.Muted);
             note.TextChanged += delegate
             {
                 string value = note.Text;
@@ -600,7 +603,7 @@ namespace PictureChecklist
             DockPanel controls = FloatControls.Row();
             controls.Margin = new Thickness(0, 3, 0, 0);
             TextBlock counter = FloatControls.Text("", 12);
-            counter.Foreground = FloatControls.Muted;
+            counter.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             counter.TextWrapping = TextWrapping.NoWrap;
             counter.TextTrimming = TextTrimming.CharacterEllipsis;
             counter.Margin = new Thickness(5, 0, 4, 0);

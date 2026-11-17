@@ -31,6 +31,7 @@ namespace PictureChecklist
         private Dictionary<string,string> originalPlaces=new Dictionary<string,string>();
         private Dictionary<string,string> originalWindows=new Dictionary<string,string>();
         private string originalLastFolder;
+        private string originalTheme = "blue";
         private bool originalPinned=true,originalCompact,recentChanged;
         public List<string> Recent { get; set; }
         public Dictionary<string,ReadingPlace> Places { get; set; }
@@ -38,8 +39,10 @@ namespace PictureChecklist
         public string LastFolder { get; set; }
         public bool Pinned { get; set; }
         public bool Compact { get; set; }
+        public string Theme { get; set; }
         public Preferences()
         {
+            Theme = "blue";
             Pinned = true; Recent = new List<string>(); Places = new Dictionary<string,ReadingPlace>(); Windows = new Dictionary<string,Placement>();
         }
         internal static string Profile
@@ -55,7 +58,11 @@ namespace PictureChecklist
             try {
                 if(File.Exists(FileName)) {
                     var p = ModelJson.Read<Preferences>(File.ReadAllText(FileName, Encoding.UTF8));
-                    if(p != null && p.Recent != null && p.Places != null && p.Windows != null) {p.Baseline(); return p;}
+                    if(p != null && p.Recent != null && p.Places != null && p.Windows != null) {
+                        p.Theme = p.Theme == "green" ? "green" : "blue";
+                        p.Baseline();
+                        return p;
+                    }
                 }
             } catch (IOException) { } catch (ArgumentException) { } catch (InvalidOperationException) { } catch (UnauthorizedAccessException) { }
             return new Preferences();
@@ -71,6 +78,7 @@ namespace PictureChecklist
             originalPlaces=Places.ToDictionary(p=>p.Key,p=>ModelJson.Write(p.Value));
             originalWindows=Windows.ToDictionary(p=>p.Key,p=>ModelJson.Write(p.Value));
             originalLastFolder=LastFolder;originalPinned=Pinned;originalCompact=Compact;recentChanged=false;
+            originalTheme = Theme;
         }
         static void MergeUnchanged<T>(Dictionary<string,T> local,Dictionary<string,T> disk,Dictionary<string,string> baseline)
         {
@@ -80,7 +88,7 @@ namespace PictureChecklist
                     local[pair.Key]=pair.Value;
             }
         }
-        public void Write()
+        public void Write(bool selectedTheme = false)
         {
             Directory.CreateDirectory(Profile);
             using(var mutex = new System.Threading.Mutex(false, @"Local\PictureChecklistPreferencesV1")) {
@@ -96,6 +104,7 @@ namespace PictureChecklist
                     if(LastFolder==originalLastFolder)LastFolder=other.LastFolder;
                     if(Pinned==originalPinned)Pinned=other.Pinned;
                     if(Compact==originalCompact)Compact=other.Compact;
+                    if (!selectedTheme && Theme == originalTheme) Theme = other.Theme;
                     
                     string tmp=FileName+".tmp";
                     File.WriteAllText(tmp,ModelJson.Write(this),new UTF8Encoding(false));

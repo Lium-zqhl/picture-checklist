@@ -58,12 +58,12 @@ namespace PictureChecklist
             Margin = new Thickness(16, 9, 16, 3);
             Padding = new Thickness(11, 9, 11, 7);
             Background = Brushes.White;
-            BorderBrush = FloatControls.ColorBrush("#DCE4DD"); BorderThickness = new Thickness(1);
+            SetResourceReference(Border.BorderBrushProperty, Design.Line); BorderThickness = new Thickness(1);
             CornerRadius = new CornerRadius(9);
             FloatControls.Identify(this, "FloatComposer", "粘贴截图，新建意见");
             StackPanel layout = new StackPanel(); Child = layout;
             TextBlock label = FloatControls.Text("粘贴截图，新建意见", 12);
-            label.Foreground = FloatControls.Green; label.FontWeight = FontWeights.SemiBold;
+            label.SetResourceReference(TextBlock.ForegroundProperty, Design.Accent); label.FontWeight = FontWeights.SemiBold;
             label.Margin = new Thickness(0, 0, 0, 4); layout.Children.Add(label);
             Grid textArea = new Grid(); layout.Children.Add(textArea);
             input = new TextBox { Text = draft.Text, AcceptsReturn = true, TextWrapping = TextWrapping.Wrap,
@@ -74,7 +74,7 @@ namespace PictureChecklist
             input.ToolTip = "Ctrl+V 粘贴；每张图片新建一条意见。文字可点击添加，关闭或切换清单时会自动保留为意见。";
             textArea.Children.Add(input);
             placeholder = FloatControls.Text("点击这里 Ctrl+V，每张截图一条意见\n也可以直接写下修改意见…", 11);
-            placeholder.Foreground = FloatControls.ColorBrush("#9AA69D");
+            placeholder.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             placeholder.VerticalAlignment = VerticalAlignment.Top; placeholder.IsHitTestVisible = false;
             placeholder.LineHeight = 19; textArea.Children.Add(placeholder);
             placeholder.Visibility = input.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -85,14 +85,14 @@ namespace PictureChecklist
                 if (!HasDraft(host)) { input.Focus(); return; }
                 CommitDraft(host); host.RefreshView();
             });
-            add.Background = FloatControls.Green; add.Foreground = Brushes.White; add.BorderBrush = FloatControls.Green;
+            Design.Primary(add);
             add.Padding = new Thickness(11, 4, 11, 4); add.FontSize = 12;
             DockPanel.SetDock(add, Dock.Right); actions.Children.Add(add);
             Button files = FloatControls.Button("选图片", "FloatImportImages", PickFiles);
-            files.BorderThickness = new Thickness(0); files.Background = Brushes.Transparent; files.Foreground = FloatControls.Muted;
+            files.BorderThickness = new Thickness(0); files.Background = Brushes.Transparent; files.SetResourceReference(Control.ForegroundProperty, Design.Muted);
             files.FontSize = 11; files.Margin = new Thickness(0, 0, 7, 0);
             DockPanel.SetDock(files, Dock.Right); actions.Children.Add(files);
-            TextBlock hint = FloatControls.Text("也可拖入图片", 10); hint.Foreground = FloatControls.ColorBrush("#98A59B"); actions.Children.Add(hint);
+            TextBlock hint = FloatControls.Text("也可拖入图片", 10); hint.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted); actions.Children.Add(hint);
 
             var context = new ContextMenu();
             var paste = new MenuItem { Header = "粘贴", Command = ApplicationCommands.Paste, CommandTarget = input };

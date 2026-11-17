@@ -2,13 +2,13 @@
 
 一个 Windows 本地图文修改清单工具。把截图和文字意见收进小浮窗，一边修改，一边核对，完成后直接打钩。
 
-当前版本：**1.0.6**。许可：[MIT](LICENSE)。
+当前版本：**1.0.7**。许可：[MIT](LICENSE)。
 
 ![使用合成入门示例的实际程序界面](docs/screenshots/overview.png)
 
 ## 使用
 
-1. 将 `picture-checklist-1.0.6-windows.zip` 完整解压到可写文件夹。
+1. 将 `picture-checklist-1.0.7-windows.zip` 完整解压到可写文件夹。
 2. 双击 `PictureChecklist.exe`。
 3. 新建清单，选择清单资料的保存位置。
 4. 在底部输入区按 **Ctrl+V** 粘贴截图；每张截图自动成为独立意见。
@@ -47,7 +47,7 @@
 
 ## 从源码构建
 
-源码包名为 `picture-checklist-1.0.6-source.zip`。代码使用 C# 5、WPF 和 .NET Framework 4.8；构建脚本使用 Windows 中的 Framework 编译器。
+源码包名为 `picture-checklist-1.0.7-source.zip`。代码使用 C# 5、WPF 和 .NET Framework 4.8；构建脚本使用 Windows 中的 Framework 编译器。
 
 在源码根目录执行：
 

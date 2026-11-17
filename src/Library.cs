@@ -58,7 +58,13 @@ namespace PictureChecklist
                 AddMenu(m,"导入完整 ZIP…","HomeZip",ImportZip);
                 AddMenu(m,"迁移旧版清单…","HomeLegacy",ImportLegacy);
                 AddMenu(m,"恢复上一保存点…","HomePrevious",delegate{RestorePrevious(null);});m.IsOpen=true;
-            });commands.Children.Add(more);header.Children.Add(commands);
+            });commands.Children.Add(more);
+            Button theme = null;
+            theme = Design.Button("配色 ▾", "HomeThemeMenu", delegate { theme.ContextMenu.IsOpen = true; });
+            theme.ContextMenu = new ContextMenu { PlacementTarget = theme, Placement = PlacementMode.Bottom };
+            AddThemeChoices(theme.ContextMenu);
+            commands.Children.Add(theme);
+            header.Children.Add(commands);
             var strip=new DockPanel{Margin=new Thickness(0,22,0,8)};
             strip.Children.Add(Design.Text("我的清单",16,true));
             var category=new ComboBox{ItemsSource=new[]{"常用清单","已归档","全部"},SelectedIndex=0,Width=105,HorizontalAlignment=HorizontalAlignment.Right};
@@ -68,7 +74,7 @@ namespace PictureChecklist
             DockPanel.SetDock(removalBar,Dock.Bottom);layout.Children.Add(removalBar);
             var restore=Design.Button("撤销删除","UndoLibraryDelete",delegate{});
             DockPanel.SetDock(restore,Dock.Right);removalBar.Children.Add(restore);
-            var removalNotice=Design.Text("",12);removalNotice.Foreground=Design.Muted;
+            var removalNotice=Design.Text("",12);removalNotice.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             AutomationProperties.SetAutomationId(removalNotice,"LibraryNotice");removalBar.Children.Add(removalNotice);
             var list=new StackPanel();var scroll=new ScrollViewer{Content=list,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};
             layout.Children.Add(scroll);var data=LibraryItems();
@@ -93,14 +99,17 @@ namespace PictureChecklist
                     DockPanel.SetDock(remove,Dock.Right);row.Children.Add(remove);
                     var labels=new StackPanel{Margin=new Thickness(0,0,12,0)};
                     labels.Children.Add(Design.Text(entry.Name+(entry.Archived?"  ·  已归档":""),15,true));
-                    var summary=Design.Text(entry.Summary,12);summary.Foreground=Design.Muted;labels.Children.Add(summary);
-                    var path=Design.Text(entry.Folder,11);path.Foreground=Design.Muted;path.TextWrapping=TextWrapping.NoWrap;path.TextTrimming=TextTrimming.CharacterEllipsis;path.ToolTip=entry.Folder;labels.Children.Add(path);
-                    row.Children.Add(labels);list.Children.Add(new Border {Child=row,Margin=new Thickness(0,0,0,7),
-                        BorderThickness=new Thickness(1),BorderBrush=Design.Line,Background=Brushes.White,CornerRadius=new CornerRadius(5)});
+                    var summary=Design.Text(entry.Summary,12);summary.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);labels.Children.Add(summary);
+                    var path=Design.Text(entry.Folder,11);path.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);path.TextWrapping=TextWrapping.NoWrap;path.TextTrimming=TextTrimming.CharacterEllipsis;path.ToolTip=entry.Folder;labels.Children.Add(path);
+                    row.Children.Add(labels);
+                    var card = new Border {Child=row,Margin=new Thickness(0,0,0,7),
+                        BorderThickness=new Thickness(1),Background=Brushes.White,CornerRadius=new CornerRadius(5)};
+                    card.SetResourceReference(Border.BorderBrushProperty, Design.Line);
+                    list.Children.Add(card);
                 }
                 if(list.Children.Count==0) {
                     var empty=Design.Text(category.SelectedIndex==1?"暂无已归档清单。":"创建一份清单，或打开已有资料夹中的 checklist.json。",14);
-                    empty.Foreground=Design.Muted;empty.Margin=new Thickness(3,24,8,8);list.Children.Add(empty);
+                    empty.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);empty.Margin=new Thickness(3,24,8,8);list.Children.Add(empty);
                 }
             };
             restore.Click+=delegate {Guard(delegate{

@@ -200,7 +200,7 @@ namespace PictureChecklist
                 summary.Text = "图片预览  ·  " + files.Count + " 张";
                 bool missingTarget = Choice == Destination.Append && target.SelectedItem == null;
                 confirm.IsEnabled = files.Count > 0 && !missingTarget && work == null;
-                result.Foreground = OrganizerUi.Muted;
+                result.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
                 if (missingTarget) result.Text = "当前清单没有可追加的条目。请选择新建条目或仅放入资料库。";
                 else if (files.Count == 0) result.Text = "本次导入没有图片。可取消并重新选择。";
                 else if (Choice == Destination.Library) result.Text = "图片将保存在此清单的资料库，可随后关联到一条或多条修改意见。";
@@ -302,7 +302,7 @@ namespace PictureChecklist
                 CancellationToken token = work.Token;
                 options.IsEnabled = confirm.IsEnabled = false;
                 cancel.Content = "取消导入";
-                result.Foreground = OrganizerUi.Muted;
+                result.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
                 result.Text = "正在复制并校验图片…";
                 bool close = false, applied = false;
                 try {

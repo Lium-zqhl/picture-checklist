@@ -44,9 +44,11 @@ namespace PictureChecklist
         }
         public Shell(string path)
         {
+            Design.ApplyTheme(prefs.Theme);
             launchPath=path; Title="图文修改清单"; Width=800; Height=585;
             FontFamily=new FontFamily("Microsoft YaHei UI, Microsoft YaHei, Segoe UI"); FontSize=13;
-            Background=Design.Paper; Foreground=Design.Ink;
+            Background=Design.Paper;
+            SetResourceReference(Control.ForegroundProperty, Design.Ink);
             WindowStartupLocation=WindowStartupLocation.CenterScreen;
             UseLayoutRounding=true; SnapsToDevicePixels=true;
             delay.Tick+=delegate { delay.Stop(); Flush(); };
@@ -187,7 +189,9 @@ namespace PictureChecklist
         {
             savedMessage=message;
             if(status==null)return;
-            status.Text=message;status.Foreground=failed?Brushes.Firebrick:Design.Muted;
+            status.Text=message;
+            if (failed) status.Foreground = Brushes.Firebrick;
+            else status.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             status.ToolTip=message;
             retry.Visibility=rescue.Visibility=failed?Visibility.Visible:Visibility.Collapsed;
             undo.IsEnabled=history.Count>0;
@@ -223,28 +227,33 @@ namespace PictureChecklist
             DockPanel.SetDock(headBox,Dock.Top);layout.Children.Add(headBox);
             Button menu=null; menu=Design.Quiet(Design.Button("","ListMenu",delegate{ OpenMenu(menu);}));
             menu.HorizontalContentAlignment=HorizontalAlignment.Stretch;menu.FontSize=17;
-            menu.Foreground=Design.Ink;menu.FontWeight=FontWeights.SemiBold;menu.Padding=new Thickness(0,4,4,4);
+            menu.SetResourceReference(Control.ForegroundProperty, Design.Ink);
+            menu.FontWeight=FontWeights.SemiBold;menu.Padding=new Thickness(0,4,4,4);
             menu.ToolTip="新建、打开、切换或重命名清单";
             var nameLayout=new DockPanel();
-            var arrow=Design.Text("⌄",13);arrow.Foreground=Design.Muted;arrow.Margin=new Thickness(6,0,0,0);
+            var arrow=Design.Text("⌄",13);arrow.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);arrow.Margin=new Thickness(6,0,0,0);
             DockPanel.SetDock(arrow,Dock.Right);nameLayout.Children.Add(arrow);
             var name=Design.Text(Doc.Name,17,true);name.TextWrapping=TextWrapping.NoWrap;name.TextTrimming=TextTrimming.CharacterEllipsis;
             name.ToolTip=Folder;nameLayout.Children.Add(name);menu.Content=nameLayout;header.Children.Add(menu);
             var headActions=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};
             Grid.SetColumn(headActions,1);header.Children.Add(headActions);
             var pinned=new CheckBox{Content="置顶",IsChecked=prefs.Pinned,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(5,0,5,0)};
-            pinned.FontSize=12;pinned.Foreground=Design.Accent;
+            pinned.FontSize=12;pinned.SetResourceReference(Control.ForegroundProperty, Design.Accent);
             AutomationProperties.SetAutomationId(pinned,"Pin");
             pinned.Click+=delegate {Topmost=prefs.Pinned=pinned.IsChecked==true;SavePrefs();};
             headActions.Children.Add(pinned);
             bool organizing=mode=="organize";
             if(organizing)headActions.Children.Add(Design.Button("返回浮窗","ToggleMode",Float,true));
-            Button more=null;more=Design.Quiet(Design.Button("更多","MoreMenu",delegate{OpenMore(more);}));headActions.Children.Add(more);
+            Button more=null;
+            more=Design.Quiet(Design.Button("更多","MoreMenu",delegate{more.ContextMenu.IsOpen=true;}));
+            more.ContextMenu=CreateMoreMenu(more);
+            headActions.Children.Add(more);
             var footer=new DockPanel {LastChildFill=true,Margin=new Thickness(18,3,13,7)};
             var footBox=new Border{Background=Brushes.White,Child=footer};
             DockPanel.SetDock(footBox,Dock.Bottom);layout.Children.Add(footBox);
             if(!organizing) {
-                var compact=new CheckBox{Content="紧凑",IsChecked=Compact,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(6,0,4,0),FontSize=11,Foreground=Design.Muted};
+                var compact=new CheckBox{Content="紧凑",IsChecked=Compact,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(6,0,4,0),FontSize=11};
+                compact.SetResourceReference(Control.ForegroundProperty, Design.Muted);
                 AutomationProperties.SetAutomationId(compact,"Compact");
                 compact.Click+=delegate {prefs.Compact=compact.IsChecked==true;SavePrefs();RefreshView();};
                 DockPanel.SetDock(compact,Dock.Right);footer.Children.Add(compact);
@@ -276,17 +285,46 @@ namespace PictureChecklist
             });
             menu.IsOpen=true;
         }
-        void OpenMore(Button owner)
+        ContextMenu CreateMoreMenu(Button owner)
         {
             var menu=new ContextMenu {PlacementTarget=owner,Placement=PlacementMode.Bottom};
             if(mode=="float")AddMenu(menu,"整理与图片资料库…","ToggleMode",Organize);
             AddMenu(menu,"回收站…","MenuTrash",delegate{Organize();var organizer=view.Content as OrganizerView;if(organizer!=null)organizer.ShowTrash();});
+            var theme = new MenuItem { Header = "配色" };
+            AutomationProperties.SetAutomationId(theme, "ThemeMenu");
+            AddThemeChoices(theme);
+            menu.Items.Add(theme);
             menu.Items.Add(new Separator());
             AddMenu(menu,"导出完整备份 ZIP…","MenuExport",delegate{ExportPackage(false);});
             AddMenu(menu,"从 ZIP 恢复到新目录…","MenuImport",ImportZip);
             AddMenu(menu,"从上一保存点恢复副本…","MenuPrevious",delegate{RestorePrevious(Folder);});
             AddMenu(menu,"迁移旧版清单…","MenuMigrate",ImportLegacy);
-            menu.IsOpen=true;
+            return menu;
+        }
+        void AddThemeChoices(ItemsControl menu)
+        {
+            AddThemeChoice(menu, "蓝色", "blue");
+            AddThemeChoice(menu, "绿色", "green");
+        }
+        void AddThemeChoice(ItemsControl menu, string label, string theme)
+        {
+            var item = new MenuItem { Header = label, IsCheckable = true, IsChecked = Design.Theme == theme };
+            AutomationProperties.SetAutomationId(item, "Theme_" + theme);
+            item.Tag = theme;
+            item.Click += delegate {
+                Guard(delegate { SelectTheme(theme); });
+                foreach (MenuItem option in menu.Items)
+                    option.IsChecked = (string)option.Tag == Design.Theme;
+            };
+            menu.Items.Add(item);
+        }
+        void SelectTheme(string theme)
+        {
+            string previous = prefs.Theme;
+            prefs.Theme = theme;
+            try { prefs.Write(selectedTheme: true); }
+            catch { prefs.Theme = previous; throw; }
+            Design.ApplyTheme(prefs.Theme);
         }
         void AddMenu(ContextMenu menu,string label,string id,Action action)
         {

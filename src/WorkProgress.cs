@@ -17,7 +17,9 @@ namespace PictureChecklist
             };
             var panel=new StackPanel{Margin=new Thickness(24)};
             panel.Children.Add(Design.Text(caption,15,true));
-            panel.Children.Add(new ProgressBar{IsIndeterminate=true,Height=5,Margin=new Thickness(0,20,0,10),Foreground=Design.Accent});
+            var progress = new ProgressBar { IsIndeterminate=true, Height=5, Margin=new Thickness(0,20,0,10) };
+            progress.SetResourceReference(Control.ForegroundProperty, Design.Accent);
+            panel.Children.Add(progress);
             window.Content=panel;
             window.Closing+=delegate(object sender,System.ComponentModel.CancelEventArgs e){if(!finished)e.Cancel=true;};
             Task.Factory.StartNew(action).ContinueWith(task=>{

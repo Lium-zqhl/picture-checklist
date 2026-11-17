@@ -17,11 +17,6 @@ namespace PictureChecklist
 {
     internal static class OrganizerUi
     {
-        internal static readonly Brush Ink = new SolidColorBrush(Color.FromRgb(31, 49, 55));
-        internal static readonly Brush Muted = new SolidColorBrush(Color.FromRgb(78, 99, 105));
-        internal static readonly Brush Accent = new SolidColorBrush(Color.FromRgb(23, 102, 92));
-        internal static readonly Brush Line = new SolidColorBrush(Color.FromRgb(209, 220, 218));
-
         internal static T Id<T>(T element, string id, string name) where T : FrameworkElement
         {
             AutomationProperties.SetAutomationId(element, id);
@@ -31,12 +26,9 @@ namespace PictureChecklist
 
         internal static TextBlock Text(string value, double size, bool bold = false)
         {
-            return new TextBlock {
-                Text = value, FontSize = size, Foreground = bold ? Ink : Muted,
-                FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal,
-                VerticalAlignment = VerticalAlignment.Center,
-                TextWrapping = TextWrapping.Wrap
-            };
+            var text = Design.Text(value, size, bold);
+            if (!bold) text.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
+            return text;
         }
 
         internal static Button Button(string title, string id, Action action, bool primary = false)
@@ -46,11 +38,7 @@ namespace PictureChecklist
                 Margin = new Thickness(0, 0, 5, 3), MinHeight = 29,
                 VerticalContentAlignment = VerticalAlignment.Center
             }, id, title);
-            if (primary) {
-                button.Background = Accent;
-                button.BorderBrush = Accent;
-                button.Foreground = Brushes.White;
-            }
+            if (primary) Design.Primary(button);
             button.Click += delegate { action(); };
             return button;
         }
@@ -70,7 +58,8 @@ namespace PictureChecklist
 
         internal static ListBox List(string id, string name)
         {
-            var list = Id(new ListBox { BorderBrush = Line, BorderThickness = new Thickness(1) }, id, name);
+            var list = Id(new ListBox { BorderThickness = new Thickness(1) }, id, name);
+            list.SetResourceReference(Control.BorderBrushProperty, Design.Line);
             VirtualizingPanel.SetIsVirtualizing(list, true);
             VirtualizingPanel.SetVirtualizationMode(list, VirtualizationMode.Recycling);
             ScrollViewer.SetCanContentScroll(list, true);
@@ -107,7 +96,7 @@ namespace PictureChecklist
             text.SetValue(TextBlock.TextTrimmingProperty, TextTrimming.CharacterEllipsis);
             text.SetValue(TextBlock.FontSizeProperty, size);
             text.SetValue(TextBlock.FontWeightProperty, bold ? FontWeights.SemiBold : FontWeights.Normal);
-            text.SetValue(TextBlock.ForegroundProperty, bold ? Ink : Muted);
+            text.SetResourceReference(TextBlock.ForegroundProperty, bold ? Design.Ink : Design.Muted);
             text.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 1, 0, 1));
             return text;
         }
@@ -573,8 +562,8 @@ namespace PictureChecklist
             editor.FontSize = 15;
             editor.Padding = new Thickness(12, 10, 12, 10);
             editor.VerticalContentAlignment = VerticalAlignment.Top;
-            editor.BorderBrush = OrganizerUi.Accent;
-            editor.Background = new SolidColorBrush(Color.FromRgb(250, 253, 251));
+            editor.SetResourceReference(Border.BorderBrushProperty, Design.Accent);
+            editor.SetResourceReference(Border.BackgroundProperty, Design.Surface);
             editor.ContextMenu = ComposerMenu(editor, true);
             var area = new Grid();
             area.Children.Add(editor);

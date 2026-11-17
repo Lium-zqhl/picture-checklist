@@ -23,7 +23,7 @@ $wpf = Join-Path $framework 'WPF'
 $refs = @('System.dll','System.Core.dll','System.Xaml.dll','System.Web.Extensions.dll','System.Windows.Forms.dll','System.Drawing.dll','System.IO.Compression.dll','System.IO.Compression.FileSystem.dll') | ForEach-Object { '/reference:' + (Join-Path $framework $_) }
 $refs += @('WindowsBase.dll','PresentationCore.dll','PresentationFramework.dll','UIAutomationClient.dll','UIAutomationTypes.dll') | ForEach-Object { '/reference:' + (Join-Path $wpf $_) }
 $sources = @(Get-ChildItem -LiteralPath (Join-Path $root 'src') -Filter '*.cs' -File | Sort-Object Name | ForEach-Object FullName)
-$compilerArgs = @('/nologo','/target:winexe','/platform:anycpu','/optimize+','/codepage:65001','/langversion:5','/warn:4',('/win32manifest:' + (Join-Path $root 'src\app.manifest')),('/out:' + (Join-Path $output 'PictureChecklist.exe')))
+$compilerArgs = @('/nologo','/target:winexe','/platform:anycpu','/optimize+','/codepage:65001','/langversion:5','/warn:4',('/win32manifest:' + (Join-Path $root 'src\app.manifest')),('/win32icon:' + (Join-Path $root 'src\app.ico')),('/out:' + (Join-Path $output 'PictureChecklist.exe')))
 & (Join-Path $framework 'csc.exe') @compilerArgs @refs @sources
 if ($LASTEXITCODE -ne 0) { throw '编译失败。' }
 Copy-Item -LiteralPath (Join-Path $root 'src\app.config') -Destination (Join-Path $output 'PictureChecklist.exe.config') -Force

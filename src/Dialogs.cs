@@ -50,7 +50,7 @@ namespace PictureChecklist
             panel.Children.Add(Design.Text("从清单库删除“"+name+"”？",16,true));
             var description=Design.Text("仅移除本机列表入口，不会删除意见、图片或完成记录。可以撤销删除，或通过“打开清单”重新加入。",13);
             description.Margin=new Thickness(0,12,0,10);panel.Children.Add(description);
-            var location=Design.Text(folder,11);location.Foreground=Design.Muted;panel.Children.Add(location);
+            var location=Design.Text(folder,11);location.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);panel.Children.Add(location);
             var buttons=Actions(panel);
             var cancel=Design.Button("取消","CancelDeleteLibrary",delegate{w.DialogResult=false;});
             cancel.IsCancel=true;cancel.IsDefault=true;buttons.Children.Add(cancel);
@@ -78,7 +78,7 @@ namespace PictureChecklist
                 string pick=PickDirectory(w,"选择保存清单的上级文件夹",parent.Text);if(pick!=null)parent.Text=pick;
             });
             browse.HorizontalAlignment=HorizontalAlignment.Left;panel.Children.Add(browse);
-            var hint=Design.Text("",12);hint.Foreground=Design.Muted;hint.Margin=new Thickness(0,9,0,0);panel.Children.Add(hint);
+            var hint=Design.Text("",12);hint.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);hint.Margin=new Thickness(0,9,0,0);panel.Children.Add(hint);
             Func<string> target=delegate{
                 string requested=box.Text.Trim(),baseDir=parent.Text.Trim();
                 if(String.IsNullOrWhiteSpace(requested) || requested=="." || requested==".." ||

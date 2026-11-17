@@ -19,14 +19,15 @@ namespace PictureChecklist
         {
             this.host = host; entryId = entry.Id;
             Title = "编辑意见"; Owner = host; ShowInTaskbar = false; WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            FontFamily = host.FontFamily; FontSize = 13; Background = Brushes.White; Foreground = FloatControls.Ink;
+            FontFamily = host.FontFamily; FontSize = 13; Background = Brushes.White;
+            SetResourceReference(Control.ForegroundProperty, Design.Ink);
             Width = Math.Min(470, SystemParameters.WorkArea.Width); Height = Math.Min(650, SystemParameters.WorkArea.Height);
             MinWidth = 320; MinHeight = 380; UseLayoutRounding = true;
             FloatControls.Identify(this, "EntryEditor", "编辑意见");
             DockPanel layout = new DockPanel { Margin = new Thickness(18) }; Content = layout;
             DockPanel footer = FloatControls.Row(); footer.Margin = new Thickness(0, 12, 0, 0); DockPanel.SetDock(footer, Dock.Bottom); layout.Children.Add(footer);
             Button save = FloatControls.Button("保存修改", "EditorSave", Save);
-            save.Background = FloatControls.Green; save.Foreground = Brushes.White; save.BorderBrush = FloatControls.Green;
+            Design.Primary(save);
             save.Padding = new Thickness(18, 7, 18, 7); DockPanel.SetDock(save, Dock.Right); footer.Children.Add(save);
             Button cancel = FloatControls.Button("取消", "EditorCancel", Close); cancel.Margin = new Thickness(0, 0, 8, 0);
             DockPanel.SetDock(cancel, Dock.Right); footer.Children.Add(cancel);
@@ -59,7 +60,7 @@ namespace PictureChecklist
         }
         static TextBox Field(Panel parent, string label, string id, string value, double height, bool multiline)
         {
-            TextBlock caption = FloatControls.Text(label, 12); caption.Foreground = FloatControls.Muted;
+            TextBlock caption = FloatControls.Text(label, 12); caption.SetResourceReference(TextBlock.ForegroundProperty, Design.Muted);
             caption.Margin = new Thickness(0, 0, 0, 5); parent.Children.Add(caption);
             TextBox text = new TextBox { Text = value ?? "", MinHeight = height, MaxHeight = multiline ? height + 60 : height,
                 AcceptsReturn = multiline, TextWrapping = TextWrapping.Wrap, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,

@@ -576,6 +576,66 @@ namespace PictureChecklist
             }
         }
 
+        static void PickTheme(string buttonId, string previous, string next)
+        {
+            Button button = Need<Button>(buttonId);
+            ContextMenu menu = button.ContextMenu;
+            Check(menu != null && menu.PlacementTarget == button, "Theme choice is attached to " + buttonId);
+            ItemsControl options = buttonId == "MoreMenu"
+                ? menu.Items.OfType<MenuItem>().Single(item => AutomationProperties.GetAutomationId(item) == "ThemeMenu")
+                : (ItemsControl)menu;
+            var items = options.Items.OfType<MenuItem>().ToDictionary(AutomationProperties.GetAutomationId);
+            Check(items.Count == 2 && items["Theme_" + previous].IsChecked && !items["Theme_" + next].IsChecked,
+                "Theme menu identifies the palette currently displayed");
+            items["Theme_" + next].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Check(Preferences.Read().Theme == next, "Theme selection is saved immediately");
+        }
+
+        static async Task ThemeCases()
+        {
+            var original = LibraryDataHashes(demo);
+            await Open(demo);
+            var composer = Need<TextBox>("FloatComposerInput");
+            var add = Need<Button>("FloatAddText");
+            var progress = Need<ProgressBar>("FloatProgressBar");
+            Check(((SolidColorBrush)add.Background).Color == Color.FromRgb(27, 93, 191), "Blue is the default accent");
+            composer.Text = "待提交的意见";
+            var draft = composer.Text;
+            var stale = Preferences.Read();
+            PickTheme("MoreMenu", "blue", "green");
+            Check(ReferenceEquals(composer, Need<TextBox>("FloatComposerInput")) && composer.Text == draft,
+                "Switching colors preserves the active composer and its draft");
+            Check(((SolidColorBrush)add.Background).Color == Color.FromRgb(37, 115, 94) &&
+                ((SolidColorBrush)progress.Foreground).Color == Color.FromRgb(37, 115, 94),
+                "The existing button and progress bar update to green");
+            stale.Write();
+            Check(Preferences.Read().Theme == "green", "An older window saving other preferences preserves the latest theme");
+            composer.Clear();
+            Render("theme-green.png");
+            shell.Close();
+
+            await Open(demo);
+            Check(((SolidColorBrush)Need<Button>("FloatAddText").Background).Color == Color.FromRgb(37, 115, 94),
+                "Reopening restores the green theme");
+            shell.Organize();
+            PickTheme("MoreMenu", "green", "blue");
+            shell.Float();
+            Render("theme-blue.png");
+            shell.Close();
+
+            shell = new Shell("--home") { Opacity = 0, ShowInTaskbar = false, ShowActivated = false };
+            shell.Show();
+            await Wait("Library did not load", delegate { return Find<Button>((DependencyObject)shell.Content, "HomeThemeMenu") != null; });
+            PickTheme("HomeThemeMenu", "blue", "green");
+            Check(((SolidColorBrush)Need<Button>("NewList").Background).Color == Color.FromRgb(37, 115, 94),
+                "The library button updates to green");
+            PickTheme("HomeThemeMenu", "green", "blue");
+            shell.Close();
+            shell = null;
+            SameLibraryData(demo, original, "Theme changes preserve checklist files and images byte-for-byte");
+            Pass("Blue and green menus update controls, preserve drafts and assets, and restore the saved theme");
+        }
+
         [STAThread]
         public static int Main(string[] args)
         {
@@ -608,7 +668,7 @@ namespace PictureChecklist
                 hookProc = WindowHook; hook = SetWindowsHookEx(5, hookProc, IntPtr.Zero, GetCurrentThreadId());
                 Check(hook != IntPtr.Zero, "Test-thread activation suppression is installed");
                 app.Dispatcher.BeginInvoke(new Action(async delegate {
-                    try { await UiCases(); await BodyCopyCases(); await LibraryCases(); exit = 0; Log("RESULT PASS " + groups + " groups / " + assertions + " assertions"); }
+                    try { await UiCases(); await BodyCopyCases(); await LibraryCases(); await ThemeCases(); exit = 0; Log("RESULT PASS " + groups + " groups / " + assertions + " assertions"); }
                     catch (Exception ex) { Log("RESULT FAIL " + ex); }
                     finally { if (saveLock != null) { saveLock.Dispose(); saveLock = null; } app.Shutdown(exit); }
                 }), DispatcherPriority.Background);
